@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Timed 60-mark mock semester test and topic practice for INF 780 Research Methodology.">
+<title>INF 780 Test Trainer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: an exam paper on a cool desk — sticky invigilator bar, one centred answer sheet, highlighter used only for marks */
+:root{
+  --desk:#EEF1F5; --paper:#FFFFFF; --ink:#141C2B; --muted:#586477; --line:#D7DDE6; --soft:#F5F7FA;
+  --accent:#1E48C8; --accent-ink:#FFFFFF; --mark:#FFE15A; --mark-ink:#1B1A10;
+  --good:#17804F; --good-bg:#E5F5EC; --bad:#BC3434; --bad-bg:#FBEAEA; --warn:#A86200;
+  --display:"Bricolage Grotesque",system-ui,sans-serif; --body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --desk:#0D1219; --paper:#151C26; --ink:#E5EAF2; --muted:#98A3B4; --line:#2A3443; --soft:#1B2330;
+  --accent:#7D9BFF; --accent-ink:#0D1219; --mark:#E9C83A; --mark-ink:#16140A;
+  --good:#4CC38A; --good-bg:#12291F; --bad:#F27474; --bad-bg:#2D1717; --warn:#E4A443; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --desk:#0D1219; --paper:#151C26; --ink:#E5EAF2; --muted:#98A3B4; --line:#2A3443; --soft:#1B2330;
+  --accent:#7D9BFF; --accent-ink:#0D1219; --mark:#E9C83A; --mark-ink:#16140A;
+  --good:#4CC38A; --good-bg:#12291F; --bad:#F27474; --bad-bg:#2D1717; --warn:#E4A443; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55;margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--paper)}
+.wrap{max-width:860px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{background:var(--paper);border-bottom:1px solid var(--line);position:sticky;top:env(safe-area-inset-top,0px);z-index:5}
+.topin{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:10px}
+.brand{font-family:var(--display);font-weight:800;font-size:1.15rem;letter-spacing:-.01em;margin-right:auto}
+.brand small{display:block;font-family:var(--mono);font-weight:500;font-size:.68rem;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+nav.tabs{display:flex;gap:4px;flex-wrap:wrap}
+nav.tabs button{font:600 .9rem var(--body);background:none;border:1px solid transparent;color:var(--muted);padding:6px 12px;border-radius:999px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+nav.tabs button:hover{border-color:var(--line)}
+.bar{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding-block:8px;border-top:1px dashed var(--line);font-family:var(--mono);font-size:.82rem}
+.timer{font-weight:700;font-size:1.05rem;font-variant-numeric:tabular-nums}
+.timer.low{color:var(--bad)}
+.prog{flex:1;min-width:120px;height:6px;background:var(--soft);border-radius:4px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);width:0}
+main{padding-block:24px 80px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:clamp(1.7rem,4vw,2.4rem);font-weight:800;letter-spacing:-.02em}
+h2{font-size:1.35rem;font-weight:800}
+h3{font-size:1.05rem;font-weight:600}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:clamp(18px,4vw,36px)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+.label{font:500 .72rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.hl{background:linear-gradient(transparent 55%,var(--mark) 55%);color:inherit;padding:0 2px}
+.notice{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden;margin-block:18px}
+.notice div{background:var(--soft);padding:12px 14px}
+.notice b{display:block;font-family:var(--mono);font-size:1.05rem}
+.btn{font:700 .95rem var(--body);border:1px solid var(--ink);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:6px;cursor:pointer}
+.btn.alt{background:transparent;color:var(--ink)}
+.btn.acc{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.sm{padding:6px 12px;font-size:.85rem}
+.btn:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.section-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;border-bottom:2px solid var(--ink);padding-bottom:6px;margin-top:28px}
+.section-h:first-child{margin-top:0}
+.q{padding-block:16px;border-bottom:1px solid var(--line);display:grid;grid-template-columns:2.4rem 1fr auto;gap:4px 10px}
+.q:last-child{border-bottom:0}
+.qn{font:700 .9rem var(--mono);color:var(--muted);padding-top:2px}
+.qm{font:500 .8rem var(--mono);color:var(--muted);white-space:nowrap;padding-top:3px}
+.qb{min-width:0;grid-column:2/4}
+.qt{grid-column:2/3;min-width:0}
+.tag{display:inline-block;font:500 .68rem var(--mono);letter-spacing:.05em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:1px 6px;border-radius:3px;margin-top:4px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:5px;cursor:pointer;background:var(--paper)}
+.opt:hover{border-color:var(--muted)}
+.opt input{margin-top:5px;accent-color:var(--accent)}
+.opt.right{border-color:var(--good);background:var(--good-bg)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-bg)}
+.tf{flex-direction:row;flex-wrap:wrap}
+.tf .opt{flex:0 1 140px}
+.mt{width:100%;border-collapse:collapse;margin-top:10px}
+.mt td{padding:7px 6px;border-top:1px solid var(--line);vertical-align:top}
+.mt td:first-child{width:46%;font-weight:600}
+.mt select{width:100%;font:inherit;font-size:.9rem;padding:6px;border:1px solid var(--line);border-radius:5px;background:var(--paper);color:var(--ink)}
+.mt tr.right td:last-child select{border-color:var(--good);background:var(--good-bg)}
+.mt tr.wrong td:last-child select{border-color:var(--bad);background:var(--bad-bg)}
+.fix{font-size:.85rem;color:var(--good);margin-top:3px}
+.ctx{background:var(--soft);border-left:3px solid var(--line);padding:10px 14px;margin-top:10px;font-size:.93rem}
+textarea{width:100%;min-height:150px;font:inherit;font-size:.95rem;padding:10px;border:1px solid var(--line);border-radius:5px;background:var(--paper);color:var(--ink);margin-top:10px;resize:vertical}
+.wc{font:500 .75rem var(--mono);color:var(--muted);text-align:right}
+.fb{margin-top:12px;padding:12px 14px;border-radius:5px;background:var(--soft);font-size:.93rem}
+.fb.good{background:var(--good-bg)}
+.fb.bad{background:var(--bad-bg)}
+.fb b.v{display:block;margin-bottom:2px}
+.fb.good b.v{color:var(--good)} .fb.bad b.v{color:var(--bad)}
+.model{white-space:pre-wrap;font-size:.92rem;background:var(--paper);border:1px solid var(--line);padding:10px 12px;border-radius:5px;margin-top:8px}
+.check{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.check label{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.check input{margin-top:5px;accent-color:var(--good)}
+.sug{font:500 .7rem var(--mono);color:var(--warn);margin-left:4px}
+.selfmark{font:700 .9rem var(--mono);margin-top:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{font:600 .85rem var(--body);border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.score{display:grid;grid-template-columns:auto 1fr;gap:18px 28px;align-items:center}
+.big{font:800 clamp(2.6rem,9vw,4.2rem) var(--display);line-height:1;letter-spacing:-.03em}
+.big small{font-size:.4em;color:var(--muted)}
+.tbars{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.tb{display:grid;grid-template-columns:minmax(0,11rem) 1fr 4.5rem;gap:10px;align-items:center;font-size:.9rem}
+.tb .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb .tr{height:10px;background:var(--soft);border-radius:5px;overflow:hidden;border:1px solid var(--line)}
+.tb .tr i{display:block;height:100%}
+.tb .n{font:500 .8rem var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.crib{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:16px}
+.crib section{border:1px solid var(--line);border-radius:6px;padding:12px 14px;background:var(--paper);min-width:0}
+.crib h3{font-size:.95rem;margin-bottom:6px}
+.crib ul{margin:0;padding-left:1.1em;font-size:.88rem}
+.crib li{margin-bottom:3px}
+.hist{width:100%;border-collapse:collapse;font-size:.92rem}
+.hist th,.hist td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line)}
+.hist td.n{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.confirm{border:2px solid var(--ink);border-radius:6px;padding:14px;background:var(--soft);margin-top:14px}
+.scroll{overflow-x:auto}
+@media (max-width:560px){
+  .q{grid-template-columns:2rem 1fr auto}
+  .score{grid-template-columns:1fr}
+  .tb{grid-template-columns:minmax(0,7.5rem) 1fr 3.6rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="topin">
+      <div class="brand">INF 780 Test Trainer<small>Semester test · Prof Marié · open book, one A4</small></div>
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="mock" aria-selected="true">Mock test</button>
+        <button role="tab" data-tab="practice" aria-selected="false">Practice</button>
+        <button role="tab" data-tab="crib" aria-selected="false">A4 crib sheet</button>
+        <button role="tab" data-tab="history" aria-selected="false">History</button>
+      </nav>
+    </div>
+    <div class="bar" id="bar" hidden>
+      <span class="timer" id="timer">60:00</span>
+      <span id="answered">0 answered</span>
+      <div class="prog"><i id="progi"></i></div>
+      <button class="btn sm acc" id="submitTop">Hand in</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" id="app"></main>
+
+<script>
+const TOPICS={process:"Research process",strategy:"Research strategy",collection:"Data collection",analysis:"Data analysis",slr:"SLR",thematic:"Thematic analysis",problem:"Problem statement",rq:"Research questions",abstract:"Abstract",conclusion:"Conclusion & discussion",citations:"Citations",synthesis:"Synthesised writing"};
+
+/* ---------- QUESTION BANK ---------- */
+const MCQ=[
+{t:"process",q:"Oates describes research in terms of the “6Ps”. Which of these is NOT one of them?",o:["Population","Purpose","Paradigm","Presentation"],a:0,e:"The 6Ps are purpose, products, process, participants, paradigm and presentation (Oates)."},
+{t:"process",q:"In Oates’ 6Ps, the “products” of research are best described as:",o:["The outcomes, especially your contribution to knowledge (and possibly an IT artefact)","The software tools used to analyse data","The sequence of activities from topic to conclusion","The journals you publish in"],a:0,e:"Products = outcomes, especially the contribution to knowledge. The sequence of activities is the process."},
+{t:"process",q:"In the simplified research process from class, “Determining the sample design” answers which question?",o:["How much can we do?","What is the problem?","How can we investigate the problem?","Does it fit with the world?"],a:0,e:"Research design = how can we investigate; sample design = how much can we do; generalisation = does it fit with the world."},
+{t:"process",q:"Oates’ conceptual framework makes explicit:",o:["How you structure your thinking about the topic and the process you will follow","The final list of references","The ethical clearance number","Only the statistical tests used"],a:0,e:"It covers the factors in your topic, the theory/lens, your strategy and methods, your analysis approach and how you will evaluate the research."},
+{t:"process",q:"Your view of what valid knowledge is and how it can be obtained is your:",o:["Epistemology","Ontology","Axiology","Methodology"],a:0,e:"Ontology = nature of reality (realist vs relativist). Epistemology = valid knowledge (objective vs subjective). Axiology = your influence/values (relevance vs rigour)."},
+{t:"process",q:"Which characteristic belongs to interpretivism rather than positivism?",o:["Multiple subjective realities and researcher reflexivity","Hypothesis testing and universal laws","An objective, neutral researcher","A world that exists independently of humans and can be measured"],a:0,e:"Interpretivism: multiple subjective realities, socially constructed meaning, reflexivity. The others are positivist characteristics."},
+{t:"process",q:"Lincoln and Guba’s interpretivist equivalent of “external validity” is:",o:["Transferability","Credibility","Dependability","Confirmability"],a:0,e:"Objectivity→confirmability, reliability→dependability, internal validity→credibility, external validity→transferability."},
+{t:"process",q:"Oates warns that calling positivism “quantitative research” and interpretivism “qualitative research” is:",o:["Inaccurate: paradigms are distinguished by ontology and epistemology, and either data type can appear in any paradigm","Correct, because each paradigm uses only one data type","Correct only for surveys","Only a problem in design and creation research"],a:0,e:"Quantitative data tends to dominate positivism, but the paradigm is defined by its assumptions, not the data type."},
+{t:"strategy",q:"Which strategy investigates cause-and-effect, tests hypotheses and uses before/after measurement while controlling other factors?",o:["Experiment","Survey","Case study","Ethnography"],a:0,e:"Experiments manipulate an independent variable and control confounding variables."},
+{t:"strategy",q:"A collaborative, cyclical process of plan → act → observe → reflect, aimed at solving a practical problem while generating knowledge, is:",o:["Action research","Design and creation","Ethnography","Survey"],a:0,e:"Action research is participatory and iterative, integrating theory with practice."},
+{t:"strategy",q:"A student builds and iteratively evaluates a prototype app to address a gap in practice. The strategy is:",o:["Design and creation","Case study","Experiment","Action research"],a:0,e:"Design and creation develops new IT artefacts (systems, models, methods) through design → build → evaluate → redesign."},
+{t:"strategy",q:"Long-term immersion, participant observation, field notes and “thick description” are features of:",o:["Ethnography","Survey","Experiment","Design and creation"],a:0,e:"Ethnography studies cultures and practices from the inside over time."},
+{t:"strategy",q:"Which strategy obtains the same kinds of data from a large group in a standardised way so findings can be generalised?",o:["Survey","Case study","Action research","Ethnography"],a:0,e:"Surveys look for patterns, often with statistics, to generalise to a wider population."},
+{t:"strategy",q:"A case study that tests an existing theory in a real-world context is:",o:["Explanatory","Exploratory","Descriptive","Multiple-case"],a:0,e:"Exploratory = identifies new phenomena; explanatory = tests theories in context; descriptive = detailed account."},
+{t:"strategy",q:"Deductive reasoning, where a theoretical framework guides hypotheses that are then tested on a sample, is most often associated with:",o:["Positivism","Interpretivism","Critical research","Ethnography"],a:0,e:"Deductive → positivism (measure). Inductive (patterns → concepts → theory) → interpretivism (understand)."},
+{t:"strategy",q:"In the role of theory, a theory such as TAM acts as a “lens”. This means it:",o:["Determines what you will see and look for in the data","Guarantees your findings are correct","Replaces the need for a literature review","Can only be used in experiments"],a:0,e:"Theory frames questions, guides method and shapes interpretation. The risk is being blinded to things outside it."},
+{t:"collection",q:"The Hawthorne effect is a key concern when evaluating which data generation method?",o:["Observation","Document analysis","Questionnaires","Systematic searching"],a:0,e:"People change behaviour when they know they are being observed."},
+{t:"collection",q:"“How satisfied are you with the speed and accuracy of the system?” What is wrong with this question?",o:["It is double-barrelled (asks two things at once)","It asks for second-hand information","It is a hypothetical question","Nothing, it is well written"],a:0,e:"Each question should ask for only one piece of information."},
+{t:"collection",q:"According to the instrument-design slides, demographic questions should usually be placed:",o:["Not at the beginning; first questions should be relevant and easy","Always first, to warm respondents up","In the middle, to break up the survey","On a separate form"],a:0,e:"Start with salient, easy questions. Put potentially objectionable questions near the end."},
+{t:"collection",q:"A major advantage of the “think-aloud” cognitive interview is:",o:["Minimal interviewer bias and unanticipated answers","Very little time needed","Easy coding","Low burden on the respondent"],a:0,e:"Disadvantages are poor economy of time, unnaturalness, burden on the subject and burdensome coding."},
+{t:"collection",q:"A small-scale study simulating all conditions of the full-scale survey is a:",o:["Field pre-test","Focus group","Behaviour coding exercise","Cognitive interview"],a:0,e:"Warning signs include skewed distributions, low response rates and high “don’t know” rates."},
+{t:"collection",q:"Field notes, photographs and diagrams produced during your study are:",o:["Researcher-generated documents","Found documents","Secondary data","Grey literature"],a:0,e:"Found documents already exist (strategies, minutes, manuals). Researcher-generated ones are created for the research."},
+{t:"collection",q:"To reach expert programmers you interview one and ask them to recommend others. This is:",o:["Snowball sampling","Random sampling","Stratified sampling","Cluster sampling"],a:0,e:"Snowball and purposive sampling are typical for interviews; random, stratified and cluster for surveys."},
+{t:"collection",q:"Which is a way to INCREASE perceived reward for completing a survey?",o:["Say thank you and ask for their “advice”","Ask lots of personal questions early","Use subordinating language","Send the invitation months in advance"],a:0,e:"Rewards: positive regard, thanks, asking advice, social validation, tangible reward, interest, a deadline."},
+{t:"analysis",q:"A survey codes home language as 1 = isiZulu, 2 = Tshivenda, 3 = English. This is:",o:["Nominal data","Ordinal data","Interval data","Ratio data"],a:0,e:"Nominal numbers are labels for categories with no numerical value."},
+{t:"analysis",q:"“Time in seconds to save a data file” is which type of data?",o:["Ratio","Interval","Ordinal","Nominal"],a:0,e:"Ratio data has equal intervals AND a true zero."},
+{t:"analysis",q:"Counting how often the word “trust” appears in interview transcripts is:",o:["Quantitative analysis applied to qualitative data","Purely qualitative analysis","Not allowed in research","Meta-analysis"],a:0,e:"Words are qualitative data, but counting them is a quantitative technique."},
+{t:"analysis",q:"Which is a disadvantage of qualitative data analysis (Oates)?",o:["Interpretation is tied to the researcher, so conclusions are more tentative","It cannot handle words or images","It always requires SPSS","It produces only one correct explanation"],a:0,e:"Also: the volume of data can be overwhelming. Its advantage is richness and alternative, equally valid explanations."},
+{t:"analysis",q:"Analysing data with no preconceived theory, letting concepts emerge from the data, is:",o:["Grounded theory","Deductive analysis","Meta-analysis","Hypothesis testing"],a:0,e:"The slides note you can analyse data in its own terms (grounded theory) instead of using a framework."},
+{t:"analysis",q:"In SLR Step 7 (Boland), a DEDUCTIVE synthesis means you:",o:["Start with a framework (e.g. TOE) and map your codes to its components","Start with no framework and let themes emerge","Only count publications per year","Skip data extraction"],a:0,e:"Inductive: no framework, you name your own themes and relationships."},
+{t:"analysis",q:"In the TOE example from class, the code “competitive pressure” belongs to which component?",o:["Environmental","Technological","Organisational","Individual"],a:0,e:"Environmental: competitive pressure, industry trends, customer expectations, external support."},
+{t:"slr",q:"In PRISMA, the stage where full-text articles are assessed in detail and reasons for exclusion are documented is:",o:["Eligibility","Identification","Screening","Included"],a:0,e:"Identification → Screening (titles/abstracts) → Eligibility (full text, reasons) → Included."},
+{t:"slr",q:"Your Assignment 1 assessed 130 full-text records and excluded 97. How many studies were included?",o:["33","97","130","22"],a:0,e:"130 − 97 = 33 (13 ACM, 17 ScienceDirect, 1 ERIC, 2 reference tracing)."},
+{t:"slr",q:"Why did your SLR use SPIDER rather than PICO?",o:["SPIDER suits qualitative and mixed-methods reviews; PICO is mainly clinical/quantitative","PICO is only for engineering","SPIDER is required by PRISMA","PICO cannot produce search terms"],a:0,e:"SPIDER = Sample, Phenomenon of Interest, Design, Evaluation, Research type."},
+{t:"slr",q:"SALSA stands for:",o:["Search, Appraisal, Synthesis, Analysis","Sample, Assessment, Selection, Abstract","Scope, Analysis, Literature, Summary","Search, Abstract, Screening, Appraisal"],a:0,e:"SALSA (Grant and Booth, 2009) structures the review process."},
+{t:"slr",q:"Reviewing the reference list of a key paper to find older relevant studies is:",o:["Backward citation chaining","Forward citation chaining","Hand searching a database","A scoping review"],a:0,e:"Forward chaining finds newer works that cite the known study."},
+{t:"slr",q:"Boland’s Step 2 of the systematic review process is:",o:["Performing scoping searches, defining the review question and inclusion/exclusion criteria (and writing the protocol)","Data extraction and quality assessment","Screening titles and abstracts","Writing up and disseminating"],a:0,e:"1 Plan · 2 Scoping/question/criteria · 3 Search · 4 Screen titles & abstracts · 5 Obtain papers · 6 Select full texts · 7 Theoretical standpoint & synthesis plan · 8 Extraction, presentation, quality · 9 Analysis & synthesis · 10 Write up."},
+{t:"slr",q:"A quality appraisal tool that handles quantitative, qualitative and mixed designs in one framework (used in your Assignment 1) is:",o:["MMAT","Cochrane Risk of Bias","AMSTAR","PRISMA"],a:0,e:"MMAT (Hong et al., 2018). PRISMA is a reporting standard, not an appraisal tool."},
+{t:"slr",q:"Meta-analysis differs from narrative synthesis because it:",o:["Pools results statistically","Integrates findings descriptively","Is used for qualitative studies","Does not need inclusion criteria"],a:0,e:"Narrative synthesis suits heterogeneous studies."},
+{t:"slr",q:"In a search string, synonyms within one concept block are combined with:",o:["OR","AND","NOT","Quotation marks"],a:0,e:"OR within a block; AND between blocks; quotes for exact phrases."},
+{t:"slr",q:"Your pilot search returns far too few results. The slide’s advice is to:",o:["Remove one concept block","Add another AND block","Add more date limits","Switch from OR to AND inside blocks"],a:0,e:"Too many → add constraints. Too few → remove a block."},
+{t:"slr",q:"A “gold set” in search strategy development is:",o:["Known relevant studies used to test and validate the search","The final included studies","The highest-quality studies after appraisal","A list of journals with high impact factors"],a:0,e:"If your string misses gold-set papers, it needs refining."},
+{t:"slr",q:"Boland describes integrative synthesis (e.g. framework synthesis) as taking which approach?",o:["Deductive: concepts are defined up front","Inductive: concepts emerge","Purely statistical","Random"],a:0,e:"Interpretative synthesis (e.g. meta-ethnography, grounded theory) is inductive."},
+{t:"slr",q:"The search-string quality criterion “replicable” means:",o:["Others running it get the same results","It captures all synonyms","It minimises noise","Each term is explained"],a:0,e:"Transparent, replicable, comprehensive, precise, justifiable."},
+{t:"thematic",q:"Thematic analysis moves from:",o:["Text → codes → categories → themes","Themes → codes → text → categories","Categories → text → themes → codes","Codes → text → themes → categories"],a:0,e:"Codes are tags; categories group codes; themes are higher-level patterns."},
+{t:"thematic",q:"In Braun and Clarke’s six phases (used in your Assignment 2), Phase 4 is:",o:["Reviewing themes against the full data set","Generating initial codes","Defining and naming themes","Familiarisation"],a:0,e:"1 Familiarise · 2 Initial codes · 3 Generate themes · 4 Review themes · 5 Define and name · 6 Write up."},
+{t:"thematic",q:"According to the slides, how many major themes are typical?",o:["3–6","1–2","10–15","As many as there are codes"],a:0,e:"Too many = weak abstraction; too few = over-simplification."},
+{t:"thematic",q:"Which is NOT one of the theme validation checks?",o:["Is it expressed very strongly by one participant?","Does it appear in multiple interviews?","Is it supported by multiple codes?","Does it explain something meaningful?"],a:0,e:"Validation guards against anecdotal bias and cherry-picking quotes."},
+{t:"thematic",q:"Which sentence is good results writing?",o:["“A dominant theme was lack of trust in AI, expressed by 17 of the 22 participants.”","“Participant 4 said she does not trust AI.”","“Every quote is listed below.”","“This proves Use and Gratification Theory.”"],a:0,e:"Report patterns; quotes are evidence, not the result."},
+{t:"thematic",q:"Your Assignment 2 validated your conceptual model using:",o:["Seven semi-structured interviews analysed thematically","A survey of 1,305 users","A controlled experiment","An ethnography of TikTok creators"],a:0,e:"Seven anonymised semi-structured interviews, coded with Braun and Clarke’s six phases."},
+{t:"thematic",q:"In thematic analysis, a code is best described as:",o:["A short label (tag) for a meaning unit","A final interpretation","A theory","A participant’s pseudonym"],a:0,e:"“Codes are not interpretations yet — they are tags.”"},
+{t:"problem",q:"Which of these is a problem statement rather than a background statement?",o:["“Studies define algorithmic autonomy inconsistently and examine its mechanisms in isolation, so no integrated model explains how recommender systems erode it.”","“AI is growing rapidly.”","“Social media is widely used.”","“There is limited research in this area.”"],a:0,e:"A problem statement says what is unclear, fragmented, inconsistent or missing in the literature."},
+{t:"problem",q:"The 5-part structure for an introduction with a problem statement is:",o:["Context → What we know → Gap → Consequence → Need","Gap → Context → Need → Method → Results","Aim → Method → Results → Discussion → Conclusion","Background → Hypothesis → Test → Result → Theory"],a:0,e:"Context, what we know, the gap or deficiency, the consequence, the need."},
+{t:"problem",q:"If the problem is fragmentation of the literature, the method must be:",o:["Systematic synthesis","An experiment","Action research","Ethnography"],a:0,e:"Fragmentation → systematic synthesis; conceptual confusion → conceptual model; new model → expert evaluation."},
+{t:"problem",q:"Which is a common mistake when writing a problem statement?",o:["Claiming “no research exists”","Citing literature for the gap","Explaining the consequence of the gap","Linking the gap to the need for a conceptual model"],a:0,e:"Also: too broad, stating a societal problem instead of a literature problem, writing aims instead of problems."},
+{t:"problem",q:"For an SLR that produces a conceptual model, you are mainly solving:",o:["A conceptual confusion","A practical business problem","A coding bug","A sampling problem"],a:0,e:"“You are not solving a practical problem. You are solving a conceptual confusion.”"},
+{t:"rq",q:"Your Assignment 1 RQ asked “Through what mechanisms do recommender systems erode user autonomy…?” This framing best fits:",o:["Interpretivism: you want to understand","Positivism: you want to measure","Critical realism only","Design science"],a:0,e:"“Understand the role of…” is interpretivist; “to what extent does X mediate Y” is positivist."},
+{t:"rq",q:"Which research question is positivist?",o:["To what extent do problematic sleep and overload mediate the effect of FoMO on social media fatigue?","How do users experience FoMO on Instagram?","What does social media fatigue mean to students?","How do creators make sense of the algorithm?"],a:0,e:"It measures relationships between variables and can be tested with hypotheses."},
+{t:"rq",q:"In your SPIDER table, “the erosion of user autonomy and agency through algorithmic personalisation and hypernudging” was the:",o:["Phenomenon of Interest","Sample","Evaluation","Research type"],a:0,e:"Sample = adult users of social media and e-commerce; Evaluation = perceived control, literacy, trust, resistance."},
+{t:"rq",q:"A research question is the foundation of a systematic review. A good one is:",o:["Precise, answerable from the literature, and aligned with the method","As broad as possible to find more papers","Written after the findings","Phrased as a hypothesis in every case"],a:0,e:"Frameworks like PICO/SPIDER help make it precise and generate search terms."},
+{t:"rq",q:"When you phrase your research question and choose a strategy, Lesson 3 says this depends on:",o:["Your ontology, epistemology and axiology","Only the number of databases","Only your supervisor’s preference","The word count"],a:0,e:"How you view reality, valid knowledge, and your influence on the outcome."},
+{t:"abstract",q:"The typical abstract length given in class is:",o:["150–250 words","50–80 words","400–500 words","One full page"],a:0,e:"Always check the journal’s guidelines."},
+{t:"abstract",q:"Which is NOT one of the structured abstract components from the slides?",o:["Literature review","Purpose","Design/methodology/approach","Originality/value"],a:0,e:"Introduction, Purpose, Design/methodology/approach, Findings, Research limitations/implications, Originality/value, Keywords."},
+{t:"abstract",q:"Which is a pitfall to avoid in an abstract?",o:["“Results are discussed.”","Stating the method and sample","Including keywords","Stating the main finding"],a:0,e:"Also avoid: too much detail, info not in the paper, heavy jargon."},
+{t:"abstract",q:"An abstract must be “self-contained”. This means:",o:["It makes sense without reading the full paper","It contains no citations or numbers at all","It repeats the introduction word for word","It is written before the research is done"],a:0,e:"Often it is the only part indexed in databases."},
+{t:"conclusion",q:"A conclusion should NOT:",o:["Introduce new data or literature","Restate the research problem","Summarise main findings","Suggest future research"],a:0,e:"Also avoid repeating the entire discussion or vague, generic statements."},
+{t:"conclusion",q:"“Sample limited to one hospital, reducing generalisability” belongs in the:",o:["Limitations (end of discussion)","Abstract keywords","Findings","Problem statement"],a:0,e:"Discussion closing: limitations and transition to conclusion."},
+{t:"conclusion",q:"“These findings can be explained by Yeung’s (2017) hypernudging.” This sentence belongs in the:",o:["Discussion","Findings","Method","Abstract keywords"],a:0,e:"Findings = descriptive, no theory. Discussion = interpretation, theory, “so what?”."},
+{t:"conclusion",q:"Your Assignment 1 feedback said the Conclusion should:",o:["Start with what you have done, then answer the “so what”","List every theme again","Introduce two new studies","Only list limitations"],a:0,e:"And future research must be supported by gaps from your review, referring to specific subsections."},
+{t:"conclusion",q:"Which is a practical implication (rather than a theoretical one)?",o:["“Hospitals should prioritise explainable AI and clinician training.”","“Adoption models should integrate professional identity.”","“This extends TAM with ethical accountability.”","“Trust emerged as a dominant theme.”"],a:0,e:"Theoretical implications change frameworks; practical ones are actionable recommendations."},
+{t:"conclusion",q:"Results show what was found. The discussion explains:",o:["Why the findings matter, how they compare with literature, and what they mean for theory and practice","The search strings used","Each participant’s full story","The PRISMA numbers"],a:0,e:"Never mix results and discussion."},
+{t:"citations",q:"Your citation audit standardised “Wu, Liu, Wang and Yao (2025)” to “Wu et al. (2026)” because:",o:["It was one 5-author paper cited under inconsistent names and the wrong year","Harvard bans author names","The paper was retracted","et al. is only used for books"],a:0,e:"Use et al. for works with more than three authors, and keep one consistent form."},
+{t:"citations",q:"An “orphan citation” is:",o:["An in-text citation with no matching entry in the reference list","A reference that is cited too often","A self-citation","A citation to grey literature"],a:0,e:"In your A1 this was Li, Kuo, Sheng et al. (2025)."},
+{t:"citations",q:"If you rewrite another author’s ideas in your own words, you must:",o:["Still cite the original author","Not cite them, because it is paraphrased","Put the text in quotation marks","Add it to an appendix"],a:0,e:"Paraphrasing without acknowledgement is still plagiarism (UP declaration; Oates)."},
+{t:"citations",q:"According to Oates, the IS literature mainly uses which referencing system?",o:["Harvard (author, date)","Numbered references","Footnotes only","No in-text references"],a:0,e:"Computing literature often uses numbers sorted in a list."},
+{t:"citations",q:"Under the UP plagiarism declaration, copying and pasting from an electronic source WITH acknowledgement is:",o:["Still plagiarism","Acceptable","Acceptable if under 50 words","Acceptable for journal articles"],a:0,e:"The declaration states copying and pasting is plagiarism even if you acknowledge the source."},
+{t:"citations",q:"Zotero is:",o:["A reference manager","A qualitative coding tool","A bibliometric mapping tool","A survey platform"],a:0,e:"VOSviewer does keyword/author mapping; Zotero manages references and inserts citations."},
+{t:"synthesis",q:"Oates says a common mistake is a literature review that is “author-centric”. Instead it should be structured around:",o:["Concepts","Publication years","Journals","Countries"],a:0,e:"“Evidence for A has been found (Atkins, 1995; Jones, 1996)…” rather than “Jones found A. Smith found B.”"},
+{t:"synthesis",q:"A tool Oates suggests for organising a concept-centred review is:",o:["A matrix mapping papers to concepts","A PRISMA flow diagram","A Gantt chart","A forest plot"],a:0,e:"Rows = articles, columns = concepts, ticks show coverage."},
+{t:"synthesis",q:"Which sentence is synthesised writing?",o:["“Leadership commitment is consistently linked to AI adoption (Mokoena and Naidoo, 2021; Smith et al., 2020; Naidoo et al., 2022), though only Smith et al. (2020) tie it to strategic alignment.”","“Mokoena and Naidoo (2021) studied AI. Smith et al. (2020) also studied AI.”","“Source A says leadership matters. Source B says leadership matters.”","“According to Google, AI is important.”"],a:0,e:"Synthesis groups sources around a concept and shows agreement and difference."},
+{t:"synthesis",q:"Oates suggests thinking of a critical review as a:",o:["Funnel, from general domain ideas down to your specific questions","Circle that returns to the start","List of everything you read","Timeline of publications"],a:0,e:"It argues that the topic is worthwhile, not merely repeated, and that you add new knowledge."},
+{t:"synthesis",q:"The purpose of a literature review, according to Oates, is to:",o:["Present evidence that your topic is worthwhile and your research creates new knowledge","Show how many papers you read","Summarise every source equally","Avoid citing contradictory studies"],a:0,e:"Only material directly relevant to your research belongs in it."}
+];
+
+const TF=[
+{t:"conclusion",s:"The Findings section of an SLR should interpret results using theory.",a:false,e:"Findings are descriptive and objective. Theory and interpretation go in the Discussion."},
+{t:"analysis",s:"Qualitative data can only be analysed qualitatively.",a:false,e:"You can count words or pages (quantitative analysis of qualitative data)."},
+{t:"process",s:"Interpretivism assumes there are multiple subjective realities.",a:true,e:"There is no single version of “the truth” in interpretivism."},
+{t:"slr",s:"A systematic literature review relies mainly on primary data.",a:false,e:"An SLR uses secondary data: studies collected by others."},
+{t:"slr",s:"Title and abstract screening comes before full-text eligibility assessment.",a:true,e:"Stage 1 screening, then Stage 2 full-text selection."},
+{t:"slr",s:"In the PRISMA example, 1,000 records were screened and 700 excluded, leaving 300 full texts for eligibility.",a:true,e:"1,000 − 700 = 300."},
+{t:"thematic",s:"In a qualitative results section, the quotes are the results.",a:false,e:"Patterns are the results; quotes are evidence."},
+{t:"abstract",s:"An abstract may include information that does not appear in the paper.",a:false,e:"Never introduce information not in the paper."},
+{t:"collection",s:"Data generation produces new empirical material, whereas data collection may use existing datasets.",a:true,e:"That is the distinction drawn in the S1 Meeting 2a slides."},
+{t:"analysis",s:"Ratio data has a true zero point.",a:true,e:"That is what separates ratio from interval data."},
+{t:"strategy",s:"Ethnography usually involves short, detached observation.",a:false,e:"It involves long-term immersion and participant observation."},
+{t:"strategy",s:"Action research aims to solve a practical problem while generating knowledge.",a:true,e:"It is participatory, cyclical and change-oriented."},
+{t:"problem",s:"For an SLR that builds a conceptual model, the problem statement should mainly describe a societal problem.",a:false,e:"It should describe a literature (conceptual) problem: fragmentation, inconsistency, missing integration."},
+{t:"problem",s:"Expert evaluation is the purpose of the study.",a:false,e:"It strengthens the conceptual model developed from the SLR; it is not the purpose."},
+{t:"slr",s:"SPIDER is better suited than PICO to qualitative reviews.",a:true,e:"PICO is common in clinical and quantitative studies."},
+{t:"slr",s:"Forward citation chaining finds older studies listed in a paper’s references.",a:false,e:"That is backward chaining. Forward chaining finds newer works that cite the paper."},
+{t:"thematic",s:"Codes are interpretations of the data.",a:false,e:"Codes are tags; interpretation comes later."},
+{t:"thematic",s:"Having too many themes suggests weak abstraction.",a:true,e:"Typical is 3–6 major themes."},
+{t:"conclusion",s:"A conclusion should restate the research problem and summarise the main findings concisely.",a:true,e:"Then emphasise contribution and suggest future research."},
+{t:"conclusion",s:"The discussion section is a good place to introduce new data.",a:false,e:"The discussion is not a repetition of results, new data or unsupported opinion."},
+{t:"citations",s:"In Harvard style, “et al.” is used for works with more than three authors.",a:true,e:"As applied in your citation audit: Wu et al. (2026)."},
+{t:"process",s:"Hypothesis testing is a characteristic of positivism.",a:true,e:"Along with objectivity, measurement, quantitative analysis and universal laws."},
+{t:"analysis",s:"A deductive SLR synthesis starts with no framework.",a:false,e:"Deductive starts with a framework; inductive starts with none."},
+{t:"strategy",s:"A theory can act as a lens that determines what you will see.",a:true,e:"That is why you should not stick to it blindly."},
+{t:"thematic",s:"In a structured interview all participants get the same questions in the same order, with limited probing.",a:true,e:"That makes data comparable and coding reliable."},
+{t:"process",s:"Inductive reasoning moves from particular data to patterns and higher-level concepts, possibly a theory.",a:true,e:"Often associated with interpretivist research."},
+{t:"collection",s:"Pilot testing a questionnaire helps refine its clarity and reliability.",a:true,e:"It is part of planning and conducting surveys and questionnaires."},
+{t:"strategy",s:"A case study can use only one data source.",a:false,e:"Case studies combine sources (interviews, documents, observations) and triangulate."},
+{t:"slr",s:"Meta-analysis is the right synthesis method for heterogeneous qualitative studies.",a:false,e:"Narrative or thematic synthesis suits heterogeneous studies; meta-analysis pools comparable quantitative results."},
+{t:"analysis",s:"Every table and figure should have a caption and be referred to in the text.",a:true,e:"“Table 1 represents… / Figure 2 illustrates…”"},
+{t:"abstract",s:"Keywords after an abstract help make the paper discoverable.",a:true,e:"Choose terms that aid discoverability."},
+{t:"citations",s:"Copying and pasting from a website is fine as long as you acknowledge the source.",a:false,e:"The UP declaration counts this as plagiarism."},
+{t:"synthesis",s:"A good literature review summarises each author one by one.",a:false,e:"That is author-centric. Structure it around concepts."},
+{t:"rq",s:"“To understand the role FoMO plays in social media fatigue” reflects an interpretivist aim.",a:true,e:"Understanding = interpretivist; measuring the extent = positivist."},
+{t:"collection",s:"Behaviour coding detects problems in questions and also suggests how to solve them.",a:false,e:"It detects problems but does not suggest solutions."}
+];
+
+const MATCH=[
+{t:"strategy",title:"Match each research strategy to its description.",pairs:[["Survey","Standardised data from a large group to generalise"],["Design and creation","Develops a new IT artefact through iteration"],["Experiment","Tests cause and effect with controlled variables"],["Action research","Plan–act–observe–reflect cycles with stakeholders"],["Ethnography","Long-term cultural immersion and thick description"]]},
+{t:"slr",title:"Match each PRISMA element to what happens.",pairs:[["Identification","Records gathered from databases and other sources"],["Screening","Titles and abstracts checked against criteria"],["Eligibility","Full texts assessed; exclusion reasons recorded"],["Included","Final set of studies confirmed for synthesis"],["Flow diagram","Visual record of numbers at each stage"]]},
+{t:"analysis",title:"Match each data type to an example.",pairs:[["Nominal","Country of residence"],["Ordinal","Rank of 1st, 2nd, 3rd preference"],["Interval","Temperature in °C"],["Ratio","Seconds taken to save a file"],["Qualitative","Interview transcript"]]},
+{t:"abstract",title:"Match each abstract component to a sentence about your SLR.",pairs:[["Purpose","This review examines how recommender systems erode user autonomy."],["Design/methodology","Following PRISMA 2020, 33 studies were thematically synthesised."],["Findings","Three mechanisms combine into an “Autonomy Illusion”."],["Limitations","Only English studies from 2021–2026 were included."],["Originality/value","It reframes the Awareness Paradox as structural, not cognitive."]]},
+{t:"process",title:"Match each paradigm term to its meaning.",pairs:[["Ontology","Assumptions about the nature of reality"],["Epistemology","What counts as valid knowledge and how to get it"],["Axiology","The researcher’s values and influence on outcomes"],["Reflexivity","Acknowledging how you shape the research"],["Critical research","Challenges power relations and the status quo"]]},
+{t:"rq",title:"Match each SPIDER element to its application in your Assignment 1.",pairs:[["Sample","Adult users of social media and e-commerce platforms"],["Phenomenon of Interest","Erosion of autonomy through personalisation and hypernudging"],["Design","Quantitative, qualitative, mixed and conceptual studies"],["Evaluation","Perceived control, algorithmic literacy, trust, resistance"],["Research type","Surveys, experiments, interviews, reviews"]]},
+{t:"process",title:"Match each positivist quality criterion to its interpretivist equivalent (Lincoln and Guba).",pairs:[["Validity","Trustworthiness"],["Objectivity","Confirmability"],["Reliability","Dependability"],["Internal validity","Credibility"],["External validity","Transferability"]]},
+{t:"thematic",title:"Match each code from the AI-adoption sources to its TOE component or theme.",pairs:[["Integrates smoothly with current workflows","Technological: system capability and integration"],["Leadership commitment","Organisational: leadership and strategic guidance"],["Competitive pressure","Environmental: external pressure"],["Data protection standards","Technological: compliance and risk management"],["Government incentives","Environmental: collaboration and external support"]]},
+{t:"conclusion",title:"Match each section to what it does.",pairs:[["Findings","Reports patterns objectively, no theory"],["Discussion","Interprets findings and links them to theory"],["Conclusion","Gives closure and the take-home message"],["Abstract","Concise, self-contained summary of the whole study"],["Introduction","Context, gap, consequence and need"]]},
+{t:"slr",title:"Match each search-string element to its use.",pairs:[["OR","Joins synonyms inside one concept block"],["AND","Combines different concept blocks"],["“Quotation marks”","Searches an exact phrase"],["NOT","Excludes a term"],["(Parentheses)","Groups one block of terms"]]},
+{t:"collection",title:"Match each instrument-testing technique to its description.",pairs:[["Focus group","5–8 people discuss vocabulary and assumptions"],["Cognitive interview","Think-aloud or probing, one-on-one"],["Field pre-test","Small-scale run under real survey conditions"],["Behaviour coding","Observing interviewer–respondent interaction"],["Retrospective probing","Questions asked after the survey is done"]]},
+{t:"citations",title:"Match each citation problem to the correct fix.",pairs:[["Same paper cited as 2025 and 2026","Use one consistent author/year form"],["Cited in text but missing in references","Add the full reference entry"],["Direct quote without page","Add page number: (Bucher, 2018, p. 12)"],["Paraphrased claim with no source","Add an in-text citation"],["Five-author paper","Use et al. after the first author"]]}
+];
+
+const SHORT=[
+{t:"problem",q:"Your supervisor rejects this as a problem statement: “Recommender systems are widely used on social media and there is limited research on them.” Rewrite it as a short problem statement (one paragraph) using the five-part structure.",
+ model:"Recommender systems now curate what users see on social media and e-commerce platforms (Krook and Blockx, 2023). Existing research focuses mainly on technical performance such as accuracy and click-through (Martínez et al., 2025). However, evidence on how these systems affect user autonomy is scattered across HCI, consumer psychology and governance studies, with inconsistent definitions of agency and autonomy. Because mechanisms of influence and user responses have not been integrated, designers and regulators lack a coherent basis for judging when personalisation becomes manipulation. A systematic literature review is therefore needed to synthesise this fragmented evidence into a conceptual model of autonomy erosion.",
+ check:[["Context: briefly defines the research area",["recommender","social media","e-commerce","platform"]],["What we know: summarises what literature already covers, with a citation",["research","studies","literature","focus"]],["Gap: names what is fragmented, inconsistent or missing (not “no research”)",["fragment","inconsisten","scattered","integrat","missing","unclear"]],["Consequence: why the gap is a problem and who it affects",["because","consequen","therefore","prevent","cannot","lack","designer","regulator","policy"]],["Need: justifies an SLR and conceptual model",["systematic","conceptual model","synthes","review"]]]},
+{t:"rq",q:"Formulate a review question for an SLR on how small businesses in South Africa experience AI adoption. Label each SPIDER component.",
+ model:"Among South African SMEs (S – Sample), how is the adoption of AI tools (PI – Phenomenon of Interest) experienced, as reported in case studies and interview-based studies (D – Design), in terms of perceived barriers and enablers (E – Evaluation), across qualitative and mixed-methods research (R – Research type)?",
+ check:[["Sample identified (e.g. South African SMEs)",["sample","sme","small"]],["Phenomenon of Interest identified (AI adoption)",["phenomenon","adopt"]],["Design identified (e.g. case studies, interviews)",["design","case","interview"]],["Evaluation identified (e.g. perceived barriers/enablers)",["evaluation","barrier","enabler","percept","experienc"]],["Research type identified and question is answerable",["research type","qualitative","mixed"]]]},
+{t:"slr",q:"Build a search string for the RQ “How do recommender systems influence user autonomy on social media platforms?” Show your concept blocks and explain how you would pilot it.",
+ model:"Concepts: (1) recommender systems, (2) autonomy, (3) social media.\n\n(\"recommender system*\" OR \"recommendation algorithm*\" OR \"algorithmic curation\" OR personalisation)\nAND (autonomy OR agency OR \"perceived control\" OR manipulation)\nAND (\"social media\" OR TikTok OR Instagram OR YouTube)\n\nPilot: run it in ACM / ScienceDirect. Too many results → add a constraint (date range 2021–2026, or a block). Too few → remove a block. Check it retrieves a gold set of known papers.",
+ check:[["Breaks the RQ into concepts (not a sentence)",["concept","block"]],["Lists synonyms for each concept",["agency","algorithm","personali","tiktok","perceived control"]],["Uses OR inside blocks",[" or "]],["Uses AND between blocks",[" and ","and ("]],["Uses quotes for phrases and explains piloting/refining",["\"","“","pilot","refine","too many","too few","gold"]]]},
+{t:"thematic",q:"Read the three extracts. Generate at least four codes and group them into two themes, showing which source supports each.",
+ ctx:"Source A: Organisations check whether existing systems can handle large datasets. Leadership support and a culture that values experimentation help staff accept change. Competitors adopting AI also push firms to act.\nSource B: Leadership commitment and alignment with strategy are critical. Training and clear communication improve readiness. Market competition and customer expectations encourage adoption.\nSource C: Leadership involvement and employee preparedness shape outcomes. Competitive dynamics and regulatory requirements influence the decision to implement AI.",
+ model:"Codes: leadership support (A), leadership commitment (B), leadership involvement (C), strategic alignment (B), training (B), employee preparedness (C), competitive pressure (A, B, C), customer expectations (B), regulatory requirements (C).\n\nTheme 1 – Leadership and strategic guidance: leadership support (A), commitment (B), involvement (C), strategic alignment (B).\nTheme 2 – External pressure: competitive pressure (A, B, C), customer expectations (B), regulatory requirements (C).\n(A possible third: Skills and readiness – training (B), employee preparedness (C).)",
+ check:[["At least four codes drawn from the extracts",["leadership","competit","training","prepared","regulat","customer"]],["Codes are short labels, not sentences",["leadership support","competitive pressure","training"]],["Codes grouped into at least two themes",["theme"]],["Themes are higher-level names of your own",["external","pressure","leadership","readiness","skills","guidance"]],["Shows which sources support each code (A, B, C)",["(a","(b","(c","a,","b,","source"]]]},
+{t:"abstract",q:"Write a structured abstract (120–200 words) for your Assignment 1 SLR on recommender systems and user autonomy, plus keywords.",
+ model:"Recommender systems on social media and e-commerce platforms increasingly shape what users see, yet evidence on how they affect autonomy is fragmented. This systematic review examines the mechanisms through which recommender systems influence user decision-making, how users respond, and how well existing theory explains this. Following PRISMA 2020, ACM Digital Library, ScienceDirect and ERIC were searched; 33 studies (2021–2026) were appraised with MMAT and synthesised thematically. Findings show that persuasive interface design, preference capture and attention engineering combine into an “Autonomy Illusion”, while awareness of algorithms rarely produces lasting resistance (the “Awareness Paradox”). The review is limited to English studies. It contributes a structural account of autonomy erosion and argues that platform design and regulation, not literacy alone, must protect user agency.\n\nKeywords: recommender systems; user autonomy; hypernudging; algorithmic literacy; systematic literature review",
+ check:[["Context/problem stated briefly",["fragment","yet","gap","increasingly","despite"]],["Purpose/aim stated",["examine","aim","purpose","investigat"]],["Method: SLR, PRISMA, databases and number of studies",["prisma","systematic","33","database"]],["Main findings (mechanisms / Autonomy Illusion / Awareness Paradox)",["illusion","paradox","mechanism","finding"]],["Originality/value or implications, plus keywords",["contribut","value","implication","keyword"]]]},
+{t:"conclusion",q:"Write the Conclusion paragraph for your SLR, following your Assignment 1 feedback (“start with what you have done, then answer the so what”).",
+ model:"This review set out to explain how recommender systems on social media and e-commerce platforms affect user autonomy. Synthesising 33 studies, it found that persuasive interface design, preference capture and attention engineering together create an Autonomy Illusion, and that user awareness rarely becomes sustained resistance. So what? Autonomy erosion is structural, built into engagement-driven platform design, rather than a failure of individual users. Theoretically, this extends Yeung’s hypernudging with normative criteria; practically, it points designers and regulators to exit affordances and controllable interfaces. Future research should test the model empirically across platforms, as the gaps in Section 4.3 show.",
+ check:[["Restates what was done (aim/problem and SLR)",["set out","aim","this review","this study","examined"]],["Summarises main findings concisely",["found","finding","illusion","paradox","mechanism"]],["Answers “so what”: contribution to theory",["theor","extend","contribut","so what"]],["States practical/policy implications",["design","regulat","polic","practic"]],["Future research linked to identified gaps; no new literature",["future","further research","gap"]]]},
+{t:"synthesis",q:"Rewrite this author-centric paragraph as synthesised writing.",
+ ctx:"Huang and Liu (2025) found that algorithm awareness leads to reflective acceptance. Sotero, Vicente and Granado (2026) found that algorithmic literacy did not change interaction outcomes. Craig (2025) found that users who were aware and fatigued became resigned.",
+ model:"Greater awareness of algorithms does not reliably translate into resistance. Users who understand algorithmic curation often continue to accept it (Huang and Liu, 2025), and higher algorithmic literacy has not been linked to different interaction outcomes (Sotero, Vicente and Granado, 2026). Where awareness combines with privacy fatigue, users tend towards resignation rather than action (Craig, 2025). Together, these studies suggest an Awareness Paradox: knowledge alone is insufficient to restore autonomy.",
+ check:[["Opens with a concept-led topic sentence, not an author",["awareness","literacy","does not","rarely"]],["Groups or integrates sources around the idea",["(huang","(sotero","(craig",";"]],["Shows how sources agree, differ or build on each other",["while","whereas","however","together","similarly","where"]],["Adds your own evaluative voice / so what",["suggest","paradox","insufficient","therefore","indicat"]],["Correct Harvard in-text format",["2025)","2026)"]]]},
+{t:"citations",q:"Identify and fix FIVE citation problems in this extract.",
+ ctx:"Wu, Liu, Wang and Yao (2025) argue that transparency is insufficient, and Wu, Liu, Ding and Yao (2026) agree. Li, Kuo, Sheng et al. (2025) show intentional implicit feedback [no entry in the reference list]. Algorithms “shape the conditions of visibility on a platform” (Bucher 2018). Persuasive explanations increase the selection of lower-utility items.",
+ model:"1. Wu: one 5-author paper cited two ways → standardise to Wu et al. (2026).\n2. Wrong year (2025) → 2026.\n3. Li, Kuo, Sheng et al. (2025) is an orphan citation → add the full entry to the reference list (or remove).\n4. Direct quote needs a comma and page number → (Bucher, 2018, p. x).\n5. Uncited claim → add (Rahman, Siemon and Ruotsalo, 2026).",
+ check:[["Standardises the Wu paper to one form: Wu et al. (2026)",["et al. (2026)","wu et al","standard","consisten"]],["Corrects the wrong year",["year","2025 → 2026","2026"]],["Fixes the orphan citation (add reference entry)",["orphan","reference list","add the","missing"]],["Direct quote needs a page number (and comma)",["page","p."]],["Adds a citation for the unsupported claim",["rahman","uncited","no citation","claim"]]]},
+{t:"collection",q:"Describe a Phase 2 design to validate your conceptual model with users: strategy, data generation method, sampling, analysis and ethics.",
+ model:"Strategy: a qualitative validation (survey-style interview study) under an interpretivist paradigm, because the aim is to understand how users experience the mechanisms in the model.\nMethod: semi-structured interviews, so the same core questions cover each mechanism while allowing probing.\nSampling: purposive sampling of adult social media/e-commerce users (with snowball referrals), about 7–12 participants.\nAnalysis: transcribe, anonymise and code using Braun and Clarke’s six phases; map themes to the model and report divergent cases.\nEthics: ethical clearance, informed consent, right to withdraw, anonymity via pseudonyms and secure storage.",
+ check:[["Names and justifies a strategy / paradigm",["strategy","interpretiv","case","survey","understand"]],["Names and justifies a data generation method",["interview","questionnaire","observation"]],["Describes sampling",["purposive","snowball","sampl","participant"]],["Describes the analysis approach",["thematic","braun","code","coding"]],["Addresses ethics",["consent","ethic","anonym","confidential","withdraw"]]]},
+{t:"conclusion",q:"Explain the difference between the Findings and the Discussion in an SLR, using one example from your own review for each.",
+ model:"Findings are descriptive and objective: they report patterns in the literature without theory. Example: “Persuasive explanations increased selection of lower-utility items (Rahman, Siemon and Ruotsalo, 2026), and autoplay reduced users’ sense of agency (Lukoff et al., 2021).”\n\nThe Discussion is interpretive: it explains what the patterns mean, links them to theory and states the contribution. Example: “Together these mechanisms produce an Autonomy Illusion, extending Yeung’s (2017) hypernudging by showing that influence lies in the architecture of choice rather than in any single recommendation.”",
+ check:[["Findings = descriptive, objective, report patterns",["descript","objective","report","pattern"]],["Discussion = interpretive, explains meaning / so what",["interpret","explain","meaning","so what"]],["Gives a findings example from your SLR",["rahman","lukoff","lee","craig","found","studies"]],["Gives a discussion example linking to theory",["yeung","bucher","hypernudg","theory","illusion"]],["Mentions contribution or comparison with literature",["contribut","extend","compar","literature"]]]},
+{t:"process",q:"Describe Oates’ model of the research process, naming its components.",
+ model:"The process starts from personal experiences and motivation and a literature review, which lead to research question(s). A conceptual framework structures the thinking about the topic. The researcher then chooses a strategy (survey, design and creation, experiment, case study, action research or ethnography) and data generation methods (interviews, observations, questionnaires, documents). Data is analysed quantitatively and/or qualitatively. The whole process is shaped by participants and underpinned by a philosophical paradigm, ending in outcomes (knowledge and possibly an artefact).",
+ check:[["Experiences/motivation and literature review",["motivat","experienc","literature"]],["Research question and conceptual framework",["question","conceptual framework"]],["Strategies (names at least two)",["survey","case study","experiment","action research","ethnograph","design and creation"]],["Data generation methods (names at least two)",["interview","observation","questionnaire","document"]],["Quantitative/qualitative analysis and paradigm underpinning",["quantitativ","qualitativ","paradigm"]]]},
+{t:"analysis",q:"Compare quantitative and qualitative data analysis: define each and give one advantage and one disadvantage of each.",
+ model:"Quantitative analysis uses mathematics and statistics on numeric data (tables, charts, descriptive statistics, regression, SEM). Advantage: scientific respectability, tests of significance and large volumes analysed quickly. Disadvantage: only as good as the data; risk of tests you don’t understand; not as objective as it seems.\n\nQualitative analysis looks for themes and categories in words, images and sounds (e.g. thematic analysis). Advantage: rich, detailed data and room for alternative, equally valid explanations. Disadvantage: volume can overwhelm, and interpretation is tied to the researcher so conclusions are tentative.",
+ check:[["Defines quantitative analysis (numbers/statistics)",["statistic","number","numeric","mathemat"]],["Defines qualitative analysis (themes in words/images)",["theme","words","image","non-numeric"]],["Advantage of quantitative",["respectab","significance","quickly","objective","large"]],["Advantage of qualitative",["rich","detail","alternative"]],["A disadvantage of each",["overwhelm","tentative","subjective","dislike","as good as","not as objective"]]]}
+];
+
+/* ---------- CRIB SHEET ---------- */
+const CRIB=[
+["Research process",["Oates 6Ps: purpose, products, process, participants, paradigm, presentation","Model: motivation → lit review → RQ → conceptual framework → strategy → data generation → analysis (quant/qual)","Simplified: problem → literature → design → sample → collect → analyse → generalise → present","Ontology (reality) · epistemology (knowledge) · axiology (values)"]],
+["Research strategy",["Survey: standardised, large group, generalise","Design & creation: build artefact, iterate","Experiment: cause–effect, control variables","Case study: in-depth, triangulate (exploratory / explanatory / descriptive)","Action research: plan–act–observe–reflect","Ethnography: immersion, thick description"]],
+["Data collection",["Interviews (structured / semi / unstructured), observation, questionnaires, documents","Observation risk: Hawthorne effect","Avoid double-barrelled, hypothetical, leading questions","Test instruments: focus group, cognitive interview, field pre-test, behaviour coding","Sampling: random, stratified, cluster · purposive, snowball"]],
+["Data analysis",["Quant: nominal, ordinal, interval, ratio (true zero)","Qual: themes in words/images","Count words = quant on qual data","Deductive (framework, positivist) vs inductive (themes → theory, interpretivist)","Caption + refer to every table/figure"]],
+["SLR",["Boland 10 steps: plan · scope/RQ/criteria · search · screen T&A · obtain · select full text · synthesis plan · extract & appraise · synthesise · write up","PRISMA: identification → screening → eligibility → included","PICO (clinical) · SPIDER (qual) · SALSA","OR within blocks, AND between; too few → drop a block","Appraisal: CASP, AMSTAR, Cochrane RoB, MMAT"]],
+["Thematic analysis",["Text → codes → categories → themes","Braun & Clarke: familiarise, code, generate, review, define/name, write","3–6 themes; validate across interviews & codes","Report patterns (“17 of 22”), quotes = evidence","TOE: technological / organisational / environmental"]],
+["Problem statement",["Not background (“AI is growing”)","Context → what we know → gap → consequence → need","Problem type: fragmentation → synthesis; confusion → conceptual model; new model → expert evaluation","Mistakes: too broad, societal not literature problem, “no research exists”, aims not problems"]],
+["Research questions",["Understand → interpretivist; measure “to what extent” → positivist","SPIDER: Sample, Phenomenon of Interest, Design, Evaluation, Research type","My RQs: mechanisms (RQ1), user responses (RQ2), adequacy of theory (RQ3)"]],
+["Abstract",["150–250 words, self-contained, neutral","Purpose · design/method · findings · limitations · originality/value · keywords","Avoid: “results are discussed”, new info, jargon"]],
+["Conclusion & discussion",["Discussion: interpret, compare literature, theoretical + practical implications, limitations, future research","Conclusion: restate problem, summarise, contribution, future research","No new data or literature","Findings = what exists; discussion = what it means"]],
+["Citations",["Harvard (IS): (Author, Year); et al. for 4+ authors","Quote → add page number","Paraphrase → still cite","Watch orphan citations & inconsistent years","Copy–paste even with acknowledgement = plagiarism"]],
+["Synthesised writing",["Concept-centred, not author-centric","Group sources: (A, 2021; B, 2022)","Show agree / differ / build on","Concept matrix: papers × concepts","Funnel: general → specific → your contribution"]]
+];
+
+/* ---------- HELPERS ---------- */
+const $=s=>document.querySelector(s);
+const app=$("#app");
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function spread(pool,n){const by={};shuffle(pool).forEach(x=>(by[x.t]=by[x.t]||[]).push(x));const keys=shuffle(Object.keys(by));const out=[];while(out.length<n&&keys.some(k=>by[k].length)){for(const k of keys){if(by[k].length&&out.length<n)out.push(by[k].pop())}}return out}
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+
+let S=null; // current session
+let tab="mock";
+
+function makeItem(kind,src,idx){
+  const id=kind+idx+"_"+Math.random().toString(36).slice(2,7);
+  if(kind==="mcq"){const order=shuffle(src.o.map((_,i)=>i));return {id,kind,t:src.t,src,order,marks:1}}
+  if(kind==="tf")return {id,kind,t:src.t,src,marks:1};
+  if(kind==="match"){const letters="ABCDE";const right=shuffle(src.pairs.map(p=>p[1]));return {id,kind,t:src.t,src,right,letters,marks:src.pairs.length}}
+  return {id,kind:"short",t:src.t,src,marks:5};
+}
+function newSession(mode,items,minutes){
+  S={mode,items,ans:{},rev:{},self:{},submitted:false,endAt:minutes?Date.now()+minutes*60000:null,confirm:false};
+  clearInterval(window._tick);
+  if(minutes){window._tick=setInterval(tick,500)}
+}
+
+/* ---------- SCORING ---------- */
+function itemScore(it){
+  const a=S.ans[it.id];
+  if(it.kind==="mcq")return a===it.src.a?1:0;
+  if(it.kind==="tf")return a===it.src.a?1:0;
+  if(it.kind==="match"){let s=0;it.src.pairs.forEach((p,i)=>{if(a&&a[i]===p[1])s++});return s}
+  const ticks=S.self[it.id]||[];return ticks.filter(Boolean).length;
+}
+function isAnswered(it){const a=S.ans[it.id];if(it.kind==="match")return a&&Object.keys(a).length>0;if(it.kind==="short")return !!(a&&a.trim());return a!==undefined}
+function suggestTicks(it){const txt=(S.ans[it.id]||"").toLowerCase();return it.src.check.map(c=>txt.length>15&&c[1].some(k=>txt.includes(k.toLowerCase())))}
+
+/* ---------- RENDER: ITEMS ---------- */
+function itemHTML(it,n){
+  const rev=S.rev[it.id], src=it.src, a=S.ans[it.id];
+  let body="", fb="";
+  if(it.kind==="mcq"){
+    body=`<div class="qt">${esc(src.q)}<br><span class="tag">${TOPICS[it.t]}</span></div><div class="qb"><div class="opts">`+
+      it.order.map((oi,k)=>{let cls="";if(rev){if(oi===src.a)cls="right";else if(a===oi)cls="wrong"}
+        return `<label class="opt ${cls}"><input type="radio" name="${it.id}" data-id="${it.id}" data-v="${oi}" ${a===oi?"checked":""} ${rev?"disabled":""}><span><b class="mono">${"abcd"[k]}</b>&nbsp; ${esc(src.o[oi])}</span></label>`}).join("")+`</div>`;
+    if(rev){const ok=a===src.a;fb=`<div class="fb ${ok?"good":"bad"}"><b class="v">${ok?"Correct":a===undefined?"Not answered":"Incorrect"}</b>${esc(src.e)}</div>`}
+  } else if(it.kind==="tf"){
+    body=`<div class="qt">${esc(src.s)}<br><span class="tag">${TOPICS[it.t]}</span></div><div class="qb"><div class="opts tf">`+
+      [true,false].map(v=>{let cls="";if(rev){if(v===src.a)cls="right";else if(a===v)cls="wrong"}
+        return `<label class="opt ${cls}"><input type="radio" name="${it.id}" data-id="${it.id}" data-tf="${v}" ${a===v?"checked":""} ${rev?"disabled":""}><span>${v?"True":"False"}</span></label>`}).join("")+`</div>`;
+    if(rev){const ok=a===src.a;fb=`<div class="fb ${ok?"good":"bad"}"><b class="v">${ok?"Correct":a===undefined?"Not answered":"Incorrect"} — the statement is ${src.a?"true":"false"}.</b>${esc(src.e)}</div>`}
+  } else if(it.kind==="match"){
+    const aa=a||{};
+    body=`<div class="qt">${esc(src.title)} <span class="muted">(1 mark each)</span><br><span class="tag">${TOPICS[it.t]}</span></div><div class="qb"><div class="scroll"><table class="mt">`+
+      src.pairs.map((p,i)=>{let cls="";if(rev)cls=aa[i]===p[1]?"right":"wrong";
+        return `<tr class="${cls}"><td>${esc(p[0])}</td><td><select data-id="${it.id}" data-row="${i}" ${rev?"disabled":""} aria-label="Match for ${esc(p[0])}"><option value="">Choose…</option>${it.right.map(r=>`<option ${aa[i]===r?"selected":""}>${esc(r)}</option>`).join("")}</select>${rev&&aa[i]!==p[1]?`<div class="fix">✓ ${esc(p[1])}</div>`:""}</td></tr>`}).join("")+`</table></div>`;
+    if(rev){const s=itemScore(it);fb=`<div class="fb ${s===src.pairs.length?"good":"bad"}"><b class="v">${s} / ${src.pairs.length} matched correctly</b></div>`}
+  } else {
+    const txt=a||"";const wc=txt.trim()?txt.trim().split(/\s+/).length:0;
+    body=`<div class="qt">${esc(src.q)}<br><span class="tag">${TOPICS[it.t]}</span></div><div class="qb">${src.ctx?`<div class="ctx">${esc(src.ctx).replace(/\n/g,"<br>")}</div>`:""}
+      <textarea id="ta_${it.id}" data-id="${it.id}" ${rev?"readonly":""} placeholder="Write your answer as you would in the test…">${esc(txt)}</textarea><div class="wc">${wc} words</div>`;
+    if(rev){
+      if(!S.self[it.id])S.self[it.id]=suggestTicks(it);
+      const sug=suggestTicks(it), ticks=S.self[it.id];
+      fb=`<div class="fb"><span class="label">Model answer</span><div class="model">${esc(src.model)}</div>
+        <div style="margin-top:12px"><span class="label">Mark yourself: tick each point your answer covers</span></div>
+        <div class="check">${src.check.map((c,i)=>`<label><input type="checkbox" data-self="${it.id}" data-i="${i}" ${ticks[i]?"checked":""}><span>${esc(c[0])}${sug[i]?'<span class="sug">keyword found</span>':""}</span></label>`).join("")}</div>
+        <div class="selfmark">Your mark: <span class="hl">${itemScore(it)} / 5</span></div></div>`;
+    }
+  }
+  const checkBtn=(S.mode==="practice"&&!rev)?`<div style="margin-top:10px"><button class="btn sm alt" data-check="${it.id}">Check answer</button></div>`:"";
+  const cut=body.indexOf('<div class="qb">');
+  const qt=body.slice(0,cut), qb=body.slice(cut+16);
+  return `<div class="q" id="q_${it.id}"><div class="qn">${n}.</div>${qt}<div class="qm">[${it.marks}]</div><div class="qb">${qb}${fb}${checkBtn}</div></div>`;
+}
+/* simpler: build wrapper explicitly */
+function card(it,n){
+  const inner=itemHTML(it,n);return inner;
+}
+
+/* ---------- VIEWS ---------- */
+function render(){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab?"true":"false"));
+  $("#bar").hidden=!(S&&S.mode==="mock"&&!S.submitted&&tab==="mock");
+  if(tab==="mock")renderMock();else if(tab==="practice")renderPractice();else if(tab==="crib")renderCrib();else renderHistory();
+  updateBar();
+}
+function renderMock(){
+  if(!S||S.mode!=="mock"){
+    app.innerHTML=`<div class="sheet stack">
+      <span class="label">Course announcement · Semester test content</span>
+      <h1>Sit a full mock of the <span class="hl">semester test</span></h1>
+      <p class="muted" style="max-width:62ch;margin:0">A fresh paper is drawn from the question bank every time, built from your slides, Oates, Boland, and your own Assignments 1 and 2. Same format and mark split as the real test. Keep your handwritten A4 page next to you.</p>
+      <div class="notice">
+        <div><span class="label">Time</span><b>1 hour</b></div>
+        <div><span class="label">Marks</span><b>60</b></div>
+        <div><span class="label">Format</span><b>MCQ · T/F · matching · writing</b></div>
+        <div><span class="label">Rules</span><b>Open book, one A4</b></div>
+      </div>
+      <div class="scroll"><table class="hist"><thead><tr><th>Section</th><th>Type</th><th>Marks</th></tr></thead><tbody>
+        <tr><td>A</td><td>20 multiple choice</td><td class="n">20</td></tr>
+        <tr><td>B</td><td>10 true / false</td><td class="n">10</td></tr>
+        <tr><td>C</td><td>2 matching sets of 5</td><td class="n">10</td></tr>
+        <tr><td>D</td><td>4 short writing questions</td><td class="n">20</td></tr>
+      </tbody></table></div>
+      <p class="muted" style="margin:0;font-size:.92rem">Section D is self-marked: after you hand in, you see a model answer and a checklist of the five points a marker looks for. Keywords in your answer are flagged to help you, but you decide.</p>
+      <div class="row"><button class="btn acc" id="startMock">Start the 60-minute test</button><button class="btn alt" id="startUntimed">Start without a timer</button></div>
+    </div>`;
+    return;
+  }
+  const secs={mcq:["A","Multiple choice"],tf:["B","True or false"],match:["C","Matching"],short:["D","Short writing"]};
+  let html="",n=0,last="";
+  S.items.forEach(it=>{if(it.kind!==last){if(last)html+="</div>";last=it.kind;const m=S.items.filter(x=>x.kind===it.kind).reduce((s,x)=>s+x.marks,0);
+    html+=`<div class="section-h"><h2>Section ${secs[it.kind][0]}: ${secs[it.kind][1]}</h2><span class="mono muted">[${m} marks]</span></div><div>`}
+    html+=card(it,++n)});
+  html+="</div>";
+  app.innerHTML=(S.submitted?resultsHTML():"")+`<div class="sheet" id="paper">${html}
+    ${S.submitted?`<div class="row" style="margin-top:20px"><button class="btn acc" id="again">Draw a new paper</button></div>`:
+      `<div id="handin" style="margin-top:22px">${handinHTML()}</div>`}</div>`;
+}
+function handinHTML(){
+  const un=S.items.filter(it=>!isAnswered(it)).length;
+  if(!S.confirm)return `<button class="btn acc" id="submitBtn">Hand in paper</button>`;
+  return `<div class="confirm"><b>Hand in now?</b> ${un?`You have ${un} unanswered question${un>1?"s":""}.`:"All questions answered."} You can’t change answers afterwards.<div class="row" style="margin-top:10px"><button class="btn acc" id="confirmYes">Yes, hand in</button><button class="btn alt" id="confirmNo">Keep writing</button></div></div>`;
+}
+function topicBreakdown(){
+  const t={};S.items.forEach(it=>{t[it.t]=t[it.t]||[0,0];t[it.t][0]+=itemScore(it);t[it.t][1]+=it.marks});return t;
+}
+function resultsHTML(){
+  const tot=S.items.reduce((s,it)=>s+itemScore(it),0),max=S.items.reduce((s,it)=>s+it.marks,0),pct=Math.round(tot/max*100);
+  const tb=topicBreakdown();
+  const rows=Object.entries(tb).sort((a,b)=>a[1][0]/a[1][1]-b[1][0]/b[1][1]).map(([k,[e,m]])=>{const p=e/m;const col=p>=.75?"var(--good)":p>=.5?"var(--warn)":"var(--bad)";
+    return `<div class="tb"><span class="t">${TOPICS[k]}</span><span class="tr"><i style="width:${Math.max(3,p*100)}%;background:${col}"></i></span><span class="n">${e}/${m}</span></div>`}).join("");
+  const weak=Object.entries(tb).filter(([k,[e,m]])=>e/m<.6).map(([k])=>TOPICS[k]);
+  return `<div class="sheet" style="margin-bottom:16px"><div class="score"><div class="big">${tot}<small> / ${max}</small></div>
+    <div><span class="label">Result · ${pct}%</span><p style="margin:4px 0 0">${pct>=75?"Strong paper.":pct>=50?"A pass, with room to sharpen.":"Below 50%: revise the weak topics below, then try another paper."} ${weak.length?`Focus next on: <b>${weak.join(", ")}</b>.`:""} Section D marks update as you tick the checklists below.</p></div></div>
+    <div class="tbars">${rows}</div></div>`;
+}
+function renderPractice(){
+  if(!S||S.mode!=="practice"){
+    const sel=store.get("pt_topics",Object.keys(TOPICS));
+    const types=store.get("pt_types",["mcq","tf","match","short"]);
+    app.innerHTML=`<div class="sheet stack"><span class="label">Practice by topic</span><h1>Drill the topics you’re weakest on</h1>
+      <p class="muted" style="margin:0;max-width:62ch">Pick topics and question types. Every question shows its answer and explanation as soon as you check it. No timer.</p>
+      <div><span class="label">Topics</span><div class="chips" id="topicChips">${Object.entries(TOPICS).map(([k,v])=>`<button class="chip" data-topic="${k}" aria-pressed="${sel.includes(k)}">${v}</button>`).join("")}</div>
+      <div class="row" style="margin-top:8px"><button class="btn sm alt" id="allT">All</button><button class="btn sm alt" id="noneT">None</button></div></div>
+      <div><span class="label">Question types</span><div class="chips" id="typeChips">${[["mcq","Multiple choice"],["tf","True / false"],["match","Matching"],["short","Short writing"]].map(([k,v])=>`<button class="chip" data-type="${k}" aria-pressed="${types.includes(k)}">${v}</button>`).join("")}</div></div>
+      <div class="row"><button class="btn acc" id="startPractice">Start practice</button><span class="muted" id="pcount"></span></div></div>`;
+    countPractice();return;
+  }
+  const done=S.items.filter(it=>S.rev[it.id]),got=done.reduce((s,it)=>s+itemScore(it),0),mx=done.reduce((s,it)=>s+it.marks,0);
+  app.innerHTML=`<div class="sheet" style="margin-bottom:16px"><div class="row" style="justify-content:space-between"><div><span class="label">Practice set</span><h2>${done.length} of ${S.items.length} checked · <span class="hl">${got}/${mx||0}</span></h2></div><button class="btn sm alt" id="newPractice">Change topics</button></div></div>
+    <div class="sheet" id="paper">${S.items.map((it,i)=>card(it,i+1)).join("")}</div>`;
+}
+function countPractice(){
+  const tps=[...document.querySelectorAll("#topicChips .chip")].filter(b=>b.getAttribute("aria-pressed")==="true").map(b=>b.dataset.topic);
+  const tys=[...document.querySelectorAll("#typeChips .chip")].filter(b=>b.getAttribute("aria-pressed")==="true").map(b=>b.dataset.type);
+  store.set("pt_topics",tps);store.set("pt_types",tys);
+  const n=(tys.includes("mcq")?MCQ.filter(x=>tps.includes(x.t)).length:0)+(tys.includes("tf")?TF.filter(x=>tps.includes(x.t)).length:0)+(tys.includes("match")?MATCH.filter(x=>tps.includes(x.t)).length:0)+(tys.includes("short")?SHORT.filter(x=>tps.includes(x.t)).length:0);
+  const el=$("#pcount");if(el)el.textContent=n+" questions selected";return {tps,tys,n};
+}
+function renderCrib(){
+  const notes=store.get("crib_notes","");
+  app.innerHTML=`<div class="sheet"><span class="label">Plan your handwritten A4</span><h1>What to put on your one page</h1>
+    <p class="muted" style="max-width:64ch">You may bring one handwritten A4 page, back to back. No copies. These are the facts the question bank tests most. Copy what you keep forgetting; the History tab shows which topics cost you marks.</p>
+    <div class="crib">${CRIB.map(([h,l])=>`<section><h3>${h}</h3><ul>${l.map(x=>`<li>${esc(x)}</li>`).join("")}</ul></section>`).join("")}</div>
+    <div style="margin-top:18px"><label class="label" for="cribNotes">My own extra notes (saved in this browser)</label><textarea id="cribNotes" placeholder="e.g. my three RQs, my PRISMA numbers 577 → 571 → 130 → 33…">${esc(notes)}</textarea></div></div>`;
+}
+function renderHistory(){
+  const h=store.get("history",[]);
+  if(!h.length){app.innerHTML=`<div class="sheet stack"><span class="label">History</span><h1>No mock tests yet</h1><p class="muted" style="margin:0">After you hand in a mock test, your score and topic breakdown appear here so you can see which topics improve.</p><div><button class="btn acc" id="goMock">Start a mock test</button></div></div>`;return}
+  const agg={};h.forEach(r=>Object.entries(r.byTopic).forEach(([k,[e,m]])=>{agg[k]=agg[k]||[0,0];agg[k][0]+=e;agg[k][1]+=m}));
+  const rows=Object.entries(agg).sort((a,b)=>a[1][0]/a[1][1]-b[1][0]/b[1][1]).map(([k,[e,m]])=>{const p=e/m;const col=p>=.75?"var(--good)":p>=.5?"var(--warn)":"var(--bad)";return `<div class="tb"><span class="t">${TOPICS[k]}</span><span class="tr"><i style="width:${Math.max(3,p*100)}%;background:${col}"></i></span><span class="n">${Math.round(p*100)}%</span></div>`}).join("");
+  app.innerHTML=`<div class="sheet stack"><span class="label">History</span><h1>Your mock test record</h1>
+    <div class="scroll"><table class="hist"><thead><tr><th>Date</th><th>Score</th><th>%</th><th>Time used</th></tr></thead><tbody>${h.slice().reverse().map(r=>`<tr><td>${new Date(r.date).toLocaleString([], {day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}</td><td class="n">${r.score}/${r.max}</td><td class="n">${Math.round(r.score/r.max*100)}%</td><td class="n">${r.used||"—"}</td></tr>`).join("")}</tbody></table></div>
+    <div><span class="label">All attempts by topic, weakest first</span><div class="tbars">${rows}</div></div>
+    <div class="row"><button class="btn alt sm" id="clearHist">Clear history</button></div></div>`;
+}
+
+/* ---------- ACTIONS ---------- */
+function buildMock(timed){
+  const items=[...spread(MCQ,20).map((s,i)=>makeItem("mcq",s,i)),...spread(TF,10).map((s,i)=>makeItem("tf",s,i)),...spread(MATCH,2).map((s,i)=>makeItem("match",s,i)),...spread(SHORT,4).map((s,i)=>makeItem("short",s,i))];
+  newSession("mock",items,timed?60:0);S.startedAt=Date.now();render();window.scrollTo(0,0);
+}
+function submitMock(){
+  S.submitted=true;S.items.forEach(it=>S.rev[it.id]=true);clearInterval(window._tick);
+  S.items.filter(i=>i.kind==="short").forEach(it=>S.self[it.id]=suggestTicks(it));
+  const used=Math.round((Date.now()-S.startedAt)/60000)+" min";
+  const h=store.get("history",[]);S.histIndex=h.length;
+  h.push({date:Date.now(),score:S.items.reduce((s,it)=>s+itemScore(it),0),max:60,byTopic:topicBreakdown(),used});store.set("history",h);
+  render();window.scrollTo(0,0);
+}
+function saveHistoryUpdate(){
+  if(S&&S.mode==="mock"&&S.submitted&&S.histIndex!==undefined){const h=store.get("history",[]);if(h[S.histIndex]){h[S.histIndex].score=S.items.reduce((s,it)=>s+itemScore(it),0);h[S.histIndex].byTopic=topicBreakdown();store.set("history",h)}}
+}
+function rerenderItem(it){
+  const el=document.getElementById("q_"+it.id);if(!el)return;const n=el.querySelector(".qn").textContent.replace(".","");
+  el.outerHTML=card(it,n);
+}
+function tick(){
+  if(!S||!S.endAt||S.submitted)return;
+  const left=Math.max(0,S.endAt-Date.now());const m=Math.floor(left/60000),s=Math.floor(left%60000/1000);
+  const t=$("#timer");if(t){t.textContent=String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");t.classList.toggle("low",left<5*60000)}
+  if(left<=0){submitMock()}
+}
+function updateBar(){
+  if(!S||S.mode!=="mock")return;const n=S.items.filter(isAnswered).length;
+  $("#answered").textContent=n+" / "+S.items.length+" answered";$("#progi").style.width=(n/S.items.length*100)+"%";
+  if(!S.endAt)$("#timer").textContent="Untimed";else tick();
+}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.tab){tab=b.dataset.tab;render();return}
+  const id=b.id;
+  if(id==="startMock")buildMock(true);
+  else if(id==="startUntimed")buildMock(false);
+  else if(id==="submitBtn"||id==="submitTop"){if(tab!=="mock"){tab="mock";render()}S.confirm=true;const h=$("#handin");if(h){h.innerHTML=handinHTML();h.scrollIntoView({behavior:"smooth",block:"center"})}}
+  else if(id==="confirmYes")submitMock();
+  else if(id==="confirmNo"){S.confirm=false;$("#handin").innerHTML=handinHTML()}
+  else if(id==="again"){S=null;render();window.scrollTo(0,0)}
+  else if(id==="goMock"){tab="mock";render()}
+  else if(id==="clearHist"){if(b.dataset.armed){store.set("history",[]);render()}else{b.dataset.armed="1";b.textContent="Click again to clear"}}
+  else if(b.dataset.topic||b.dataset.type){b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")==="true"?"false":"true");countPractice()}
+  else if(id==="allT"||id==="noneT"){document.querySelectorAll("#topicChips .chip").forEach(c=>c.setAttribute("aria-pressed",id==="allT"?"true":"false"));countPractice()}
+  else if(id==="startPractice"){const {tps,tys,n}=countPractice();if(!n){$("#pcount").textContent="Pick at least one topic and type.";return}
+    const f=x=>tps.includes(x.t);const items=[];
+    if(tys.includes("mcq"))shuffle(MCQ.filter(f)).forEach((s,i)=>items.push(makeItem("mcq",s,i)));
+    if(tys.includes("tf"))shuffle(TF.filter(f)).forEach((s,i)=>items.push(makeItem("tf",s,i)));
+    if(tys.includes("match"))shuffle(MATCH.filter(f)).forEach((s,i)=>items.push(makeItem("match",s,i)));
+    if(tys.includes("short"))shuffle(SHORT.filter(f)).forEach((s,i)=>items.push(makeItem("short",s,i)));
+    newSession("practice",shuffle(items),0);render();window.scrollTo(0,0)}
+  else if(id==="newPractice"){S=null;render()}
+  else if(b.dataset.check){const it=S.items.find(x=>x.id===b.dataset.check);S.rev[it.id]=true;rerenderItem(it);
+    const h=document.querySelector(".sheet h2");if(h){const done=S.items.filter(x=>S.rev[x.id]),got=done.reduce((s,x)=>s+itemScore(x),0),mx=done.reduce((s,x)=>s+x.marks,0);h.innerHTML=`${done.length} of ${S.items.length} checked · <span class="hl">${got}/${mx}</span>`}}
+});
+document.addEventListener("change",e=>{
+  const el=e.target;if(!S)return;
+  if(el.dataset.self){const it=S.items.find(x=>x.id===el.dataset.self);S.self[it.id][+el.dataset.i]=el.checked;
+    const sm=document.querySelector("#q_"+CSS.escape(it.id)+" .selfmark");if(sm)sm.innerHTML=`Your mark: <span class="hl">${itemScore(it)} / 5</span>`;
+    if(S.mode==="mock"){saveHistoryUpdate();const r=document.querySelector("#app > .sheet");if(r&&S.submitted){const tmp=document.createElement("div");tmp.innerHTML=resultsHTML();r.replaceWith(tmp.firstElementChild)}}
+    else{const h=document.querySelector(".sheet h2");if(h){const done=S.items.filter(x=>S.rev[x.id]),got=done.reduce((s,x)=>s+itemScore(x),0),mx=done.reduce((s,x)=>s+x.marks,0);h.innerHTML=`${done.length} of ${S.items.length} checked · <span class="hl">${got}/${mx}</span>`}}
+    return}
+  const id=el.dataset.id;if(!id)return;
+  if(el.dataset.v!==undefined)S.ans[id]=+el.dataset.v;
+  else if(el.dataset.tf!==undefined)S.ans[id]=el.dataset.tf==="true";
+  else if(el.dataset.row!==undefined){S.ans[id]=S.ans[id]||{};if(el.value)S.ans[id][+el.dataset.row]=el.value;else delete S.ans[id][+el.dataset.row]}
+  updateBar();
+});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="cribNotes"){store.set("crib_notes",el.value);return}
+  if(el.tagName==="TEXTAREA"&&el.dataset.id&&S){S.ans[el.dataset.id]=el.value;const wc=el.nextElementSibling;if(wc){const t=el.value.trim();wc.textContent=(t?t.split(/\s+/).length:0)+" words"}updateBar()}
+});
+render();
+</script>
+
+</body>
+</html>
